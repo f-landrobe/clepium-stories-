@@ -1,0 +1,62 @@
+name: Publicar stories
+
+on:
+  schedule:
+    - cron: "0 15 * * *"   # 12:00 Buenos Aires (15:00 UTC)
+  workflow_dispatch:
+    inputs:
+      tanda:
+        description: "Forzar una tanda (número). Vacío = la que toca"
+        required: false
+        default: ""
+      dry_run:
+        description: "1 = simular sin publicar"
+        required: false
+        default: "0"
+      targets:
+        description: "Dónde publicar: fb,ig | fb | ig"
+        required: false
+        default: "fb,ig"
+
+permissions:
+  contents: write
+
+concurrency: publish-stories
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pillow
+
+      # Convierte los PNG nuevos de stories/ a JPG y los sube al repo,
+      # así Instagram los puede descargar desde una URL pública.
+      - name: Convertir PNG a JPG
+        run: python convert.py
+      - name: Subir JPG nuevos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add jpg
+          git diff --cached --quiet || (git commit -m "JPG generados" && git push)
+
+      - name: Publicar
+        run: python publish.py
+        env:
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+          FB_PAGE_ID: "1202626252929000"
+          IG_USER_ID: "17841427548689045"
+          BRANCH: ${{ github.ref_name }}
+          FORCE_TANDA: ${{ inputs.tanda }}
+          DRY_RUN: ${{ inputs.dry_run || '0' }}
+          TARGETS: ${{ inputs.targets || 'fb,ig' }}
+
+      - name: Guardar estado
+        if: always()
+        run: |
+          git add state.json 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "Stories publicadas $(date -u +%F)" && git push)
