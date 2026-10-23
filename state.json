@@ -1,0 +1,12 @@
+{
+  "last_tanda": 1,
+  "last_date": "2026-10-23",
+  "history": [
+    {
+      "date": "2026-10-23",
+      "tanda": 1,
+      "ok": 4,
+      "errors": 4
+    }
+  ]
+}
