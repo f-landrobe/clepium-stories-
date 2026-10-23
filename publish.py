@@ -53,8 +53,19 @@ def next_tanda(keys, last):
     return later[0] if later else keys[0]
 
 
-def api(method, path, **params):
-    params["access_token"] = TOKEN
+_page_token = None
+
+
+def page_token():
+    """Facebook exige publicar como la página: canjea el token del usuario del sistema por el de la página."""
+    global _page_token
+    if _page_token is None:
+        _page_token = api("GET", PAGE_ID, fields="access_token")["access_token"]
+    return _page_token
+
+
+def api(method, path, token=None, **params):
+    params["access_token"] = token or TOKEN
     r = requests.request(method, f"{GRAPH}/{path}", data=params if method == "POST" else None,
                          params=params if method == "GET" else None, timeout=60)
     body = r.json()
@@ -68,8 +79,9 @@ def public_url(f):
 
 
 def publish_fb(f):
-    photo = api("POST", f"{PAGE_ID}/photos", url=public_url(f), published="false")
-    return api("POST", f"{PAGE_ID}/photo_stories", photo_id=photo["id"])
+    tok = page_token()
+    photo = api("POST", f"{PAGE_ID}/photos", token=tok, url=public_url(f), published="false")
+    return api("POST", f"{PAGE_ID}/photo_stories", token=tok, photo_id=photo["id"])
 
 
 def publish_ig(f):
