@@ -1,6 +1,6 @@
 {
-  "last_tanda": 8,
-  "last_date": "2026-10-30",
+  "last_tanda": 9,
+  "last_date": "2026-10-31",
   "history": [
     {
       "date": "2026-10-23",
@@ -53,6 +53,12 @@
     {
       "date": "2026-10-30",
       "tanda": 8,
+      "ok": 8,
+      "errors": 0
+    },
+    {
+      "date": "2026-10-31",
+      "tanda": 9,
       "ok": 8,
       "errors": 0
     }
